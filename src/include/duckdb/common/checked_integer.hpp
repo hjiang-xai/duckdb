@@ -34,6 +34,30 @@ public:
 	CheckedInteger() : value(0) {}
 	CheckedInteger(T v) : value(v) {}  // implicit for seamless use as normal integer
 
+	template <class U, typename std::enable_if<std::is_arithmetic<U>::value, int>::type = 0>
+	CheckedInteger(U v) : value(ValidateAndCast<U>(v)) {}
+
+private:
+	template <class U>
+	static T ValidateAndCast(U v) {
+		// Prevent negative values from being assigned to unsigned types
+		if (std::is_unsigned<T>::value && std::is_signed<U>::value) {
+			if (v < 0) {
+				throw InternalException("Cannot assign negative value to unsigned CheckedInteger");
+			}
+		}
+		return static_cast<T>(v);
+	}
+
+	template <class U>
+	static void ValidateAssignment(U v) {
+		if (std::is_unsigned<T>::value && std::is_signed<U>::value && v < 0) {
+			throw InternalException("Cannot assign negative value to unsigned CheckedInteger");
+		}
+	}
+
+public:
+
 	// explicit conversion to underlying type
 	explicit operator T() const {
 		return value;
@@ -89,6 +113,7 @@ public:
 
 	template <class U, typename std::enable_if<std::is_arithmetic<U>::value, int>::type = 0>
 	CheckedInteger &operator+=(U rhs) {
+		ValidateAssignment<U>(rhs);
 		return operator+=(static_cast<T>(rhs));
 	}
 
@@ -106,6 +131,7 @@ public:
 
 	template <class U, typename std::enable_if<std::is_arithmetic<U>::value, int>::type = 0>
 	CheckedInteger &operator-=(U rhs) {
+		ValidateAssignment<U>(rhs);
 		return operator-=(static_cast<T>(rhs));
 	}
 
@@ -123,6 +149,7 @@ public:
 
 	template <class U, typename std::enable_if<std::is_arithmetic<U>::value, int>::type = 0>
 	CheckedInteger &operator*=(U rhs) {
+		ValidateAssignment<U>(rhs);
 		return operator*=(static_cast<T>(rhs));
 	}
 
@@ -142,6 +169,7 @@ public:
 
 	template <class U, typename std::enable_if<std::is_arithmetic<U>::value, int>::type = 0>
 	CheckedInteger &operator/=(U rhs) {
+		ValidateAssignment<U>(rhs);
 		return operator/=(static_cast<T>(rhs));
 	}
 

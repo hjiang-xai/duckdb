@@ -138,3 +138,23 @@ TEST_CASE("CheckedInteger mixed type arithmetic", "[checked_integer]") {
 	i *= 3.9;  // Casts to 3
 	REQUIRE(i.GetValue() == 15);
 }
+
+TEST_CASE("CheckedInteger unsigned cannot be negative", "[checked_integer]") {
+	// Cannot construct unsigned from negative
+	REQUIRE_THROWS_AS(u32_t(-1), InternalException);
+	REQUIRE_THROWS_AS(u64_t(-100), InternalException);
+	REQUIRE_THROWS_AS(u8_t(-1), InternalException);
+
+	// Can construct from positive
+	REQUIRE_NOTHROW(u32_t(100));
+	REQUIRE(u32_t(100).GetValue() == 100u);
+
+	// Cannot assign negative via compound assignment
+	u16_t x(50);
+	REQUIRE_THROWS_AS(x += -10, InternalException);
+	REQUIRE_THROWS_AS(x -= 100, InternalException);  // underflow caught by checked sub
+
+	// Mixed: uint32_t * negative double should fail
+	u32_t y(10);
+	REQUIRE_THROWS_AS(y *= -2.5, InternalException);
+}

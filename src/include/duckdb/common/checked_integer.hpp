@@ -87,6 +87,11 @@ public:
 		return *this;
 	}
 
+	template <class U, typename std::enable_if<std::is_arithmetic<U>::value, int>::type = 0>
+	CheckedInteger &operator+=(U rhs) {
+		return operator+=(static_cast<T>(rhs));
+	}
+
 	CheckedInteger &operator-=(CheckedInteger rhs) {
 		return operator-=(rhs.value);
 	}
@@ -99,6 +104,11 @@ public:
 		return *this;
 	}
 
+	template <class U, typename std::enable_if<std::is_arithmetic<U>::value, int>::type = 0>
+	CheckedInteger &operator-=(U rhs) {
+		return operator-=(static_cast<T>(rhs));
+	}
+
 	CheckedInteger &operator*=(CheckedInteger rhs) {
 		return operator*=(rhs.value);
 	}
@@ -109,6 +119,11 @@ public:
 		}
 		value = result;
 		return *this;
+	}
+
+	template <class U, typename std::enable_if<std::is_arithmetic<U>::value, int>::type = 0>
+	CheckedInteger &operator*=(U rhs) {
+		return operator*=(static_cast<T>(rhs));
 	}
 
 	CheckedInteger &operator/=(CheckedInteger rhs) {
@@ -125,6 +140,11 @@ public:
 		return *this;
 	}
 
+	template <class U, typename std::enable_if<std::is_arithmetic<U>::value, int>::type = 0>
+	CheckedInteger &operator/=(U rhs) {
+		return operator/=(static_cast<T>(rhs));
+	}
+
 	// binary arithmetic (return new CheckedInteger)
 	CheckedInteger operator+(CheckedInteger rhs) const {
 		return operator+(rhs.value);
@@ -135,6 +155,11 @@ public:
 			throw InternalException("Overflow in addition for CheckedInteger");
 		}
 		return CheckedInteger(result);
+	}
+
+	template <class U, typename std::enable_if<std::is_arithmetic<U>::value, int>::type = 0>
+	CheckedInteger operator+(U rhs) const {
+		return operator+(static_cast<T>(rhs));
 	}
 
 	CheckedInteger operator-(CheckedInteger rhs) const {
@@ -148,6 +173,11 @@ public:
 		return CheckedInteger(result);
 	}
 
+	template <class U, typename std::enable_if<std::is_arithmetic<U>::value, int>::type = 0>
+	CheckedInteger operator-(U rhs) const {
+		return operator-(static_cast<T>(rhs));
+	}
+
 	CheckedInteger operator*(CheckedInteger rhs) const {
 		return operator*(rhs.value);
 	}
@@ -157,6 +187,11 @@ public:
 			throw InternalException("Overflow in multiplication for CheckedInteger");
 		}
 		return CheckedInteger(result);
+	}
+
+	template <class U, typename std::enable_if<std::is_arithmetic<U>::value, int>::type = 0>
+	CheckedInteger operator*(U rhs) const {
+		return operator*(static_cast<T>(rhs));
 	}
 
 	CheckedInteger operator/(CheckedInteger rhs) const {
@@ -170,6 +205,11 @@ public:
 			throw InternalException("Overflow in division for CheckedInteger");
 		}
 		return CheckedInteger(value / rhs);
+	}
+
+	template <class U, typename std::enable_if<std::is_arithmetic<U>::value, int>::type = 0>
+	CheckedInteger operator/(U rhs) const {
+		return operator/(static_cast<T>(rhs));
 	}
 
 	// comparisons to support usage in conditions/loops

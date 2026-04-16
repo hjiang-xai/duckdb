@@ -113,8 +113,15 @@ public:
 
 	template <class U, typename std::enable_if<std::is_arithmetic<U>::value, int>::type = 0>
 	CheckedInteger &operator+=(U rhs) {
-		ValidateAssignment<U>(rhs);
-		return operator+=(static_cast<T>(rhs));
+		// Perform arithmetic in promoted type, then assign back
+		using Promoted = typename std::common_type<T, U>::type;
+		Promoted result = static_cast<Promoted>(value) + static_cast<Promoted>(rhs);
+		// Check if result fits in T
+		if (static_cast<Promoted>(static_cast<T>(result)) != result) {
+			throw InternalException("Overflow in addition for CheckedInteger");
+		}
+		value = static_cast<T>(result);
+		return *this;
 	}
 
 	CheckedInteger &operator-=(CheckedInteger rhs) {
@@ -131,8 +138,13 @@ public:
 
 	template <class U, typename std::enable_if<std::is_arithmetic<U>::value, int>::type = 0>
 	CheckedInteger &operator-=(U rhs) {
-		ValidateAssignment<U>(rhs);
-		return operator-=(static_cast<T>(rhs));
+		using Promoted = typename std::common_type<T, U>::type;
+		Promoted result = static_cast<Promoted>(value) - static_cast<Promoted>(rhs);
+		if (static_cast<Promoted>(static_cast<T>(result)) != result) {
+			throw InternalException("Underflow in subtraction for CheckedInteger");
+		}
+		value = static_cast<T>(result);
+		return *this;
 	}
 
 	CheckedInteger &operator*=(CheckedInteger rhs) {
@@ -149,8 +161,13 @@ public:
 
 	template <class U, typename std::enable_if<std::is_arithmetic<U>::value, int>::type = 0>
 	CheckedInteger &operator*=(U rhs) {
-		ValidateAssignment<U>(rhs);
-		return operator*=(static_cast<T>(rhs));
+		using Promoted = typename std::common_type<T, U>::type;
+		Promoted result = static_cast<Promoted>(value) * static_cast<Promoted>(rhs);
+		if (static_cast<Promoted>(static_cast<T>(result)) != result) {
+			throw InternalException("Overflow in multiplication for CheckedInteger");
+		}
+		value = static_cast<T>(result);
+		return *this;
 	}
 
 	CheckedInteger &operator/=(CheckedInteger rhs) {
@@ -169,8 +186,16 @@ public:
 
 	template <class U, typename std::enable_if<std::is_arithmetic<U>::value, int>::type = 0>
 	CheckedInteger &operator/=(U rhs) {
-		ValidateAssignment<U>(rhs);
-		return operator/=(static_cast<T>(rhs));
+		if (rhs == 0) {
+			throw InternalException("Division by zero in CheckedInteger");
+		}
+		using Promoted = typename std::common_type<T, U>::type;
+		Promoted result = static_cast<Promoted>(value) / static_cast<Promoted>(rhs);
+		if (static_cast<Promoted>(static_cast<T>(result)) != result) {
+			throw InternalException("Overflow in division for CheckedInteger");
+		}
+		value = static_cast<T>(result);
+		return *this;
 	}
 
 	// binary arithmetic (return new CheckedInteger)

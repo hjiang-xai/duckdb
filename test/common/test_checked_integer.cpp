@@ -157,4 +157,9 @@ TEST_CASE("CheckedInteger unsigned cannot be negative", "[checked_integer]") {
 	// Mixed: uint32_t * negative double should fail
 	u32_t y(10);
 	REQUIRE_THROWS_AS(y *= -2.5, InternalException);
+
+	// Conforms to normal C++ arithmetic: uint16_t(9) -= -10 → 19
+	u16_t z(9);
+	z -= -10;
+	REQUIRE(z.GetValue() == 19u);
 }

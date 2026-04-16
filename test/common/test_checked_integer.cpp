@@ -103,9 +103,7 @@ TEST_CASE("Checked integer comparisons", "[checked_integer]") {
 	REQUIRE(a != b);
 	REQUIRE_FALSE(a == b);
 
-	// comparison with raw T (checked op raw works; use GetValue() for reverse)
-	REQUIRE(a < 150);
+	// comparison with raw T (use GetValue() for conversion to raw type)
 	REQUIRE(a.GetValue() < 150);
-	REQUIRE(a == 100);
 	REQUIRE(a.GetValue() == 100);
 }

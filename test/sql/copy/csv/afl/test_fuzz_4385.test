@@ -1,0 +1,8 @@
+# name: test/sql/copy/csv/afl/test_fuzz_4385.test
+# description: fuzzer issue 4385
+# group: [afl]
+
+statement error
+FROM read_csv('{DATA_DIR}/csv/afl/4385/case_1.csv', buffer_size=1, delim=',', skip=42, quote='"', strict_mode=false);
+----
+Invalid unicode

@@ -1,4 +1,3 @@
-#include "duckdb/common/printer.hpp"
 #include "duckdb/common/vector/constant_vector.hpp"
 #include "duckdb/common/vector/flat_vector.hpp"
 #include "duckdb/common/vector/list_vector.hpp"
@@ -159,18 +158,10 @@ static bool MapToMapCast(Vector &source, Vector &result, idx_t count, CastParame
 		return true;
 	}
 
-	// if (parameters.error_message) {
-	// 	Printer::Print("error = " + *parameters.error_message);
-	// } else {
-	// 	Printer::Print("error = nullptr");
-	// }
-
 	if (!parameters.error_message) {
 		// not in TRY_CAST mode - the error will be thrown by the caller
 		return false;
 	}
-
-	// Printer::Print("result = " + result.ToString(count));
 
 	// TRY_CAST mode: child cast failures may have produced NULL keys in the
 	// result maps. NULL keys are not allowed, so NULL out those map entries.

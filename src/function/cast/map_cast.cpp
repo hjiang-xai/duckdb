@@ -1,3 +1,5 @@
+#include "duckdb/common/printer.hpp"
+#include "duckdb/common/vector/constant_vector.hpp"
 #include "duckdb/common/vector/flat_vector.hpp"
 #include "duckdb/common/vector/list_vector.hpp"
 #include "duckdb/common/vector/map_vector.hpp"
@@ -6,6 +8,8 @@
 #include "duckdb/function/cast/cast_function_set.hpp"
 #include "duckdb/function/cast/bound_cast_data.hpp"
 #include "duckdb/function/cast/vector_cast_helpers.hpp"
+
+#include <iostream>
 
 namespace duckdb {
 
@@ -149,10 +153,71 @@ static bool MapToVarcharCast(Vector &source, Vector &result, idx_t count, CastPa
 	return true;
 }
 
+static bool MapToMapCast(Vector &source, Vector &result, idx_t count, CastParameters &parameters) {
+	bool all_succeeded = ListCast::ListToListCast(source, result, count, parameters);
+	if (all_succeeded) {
+		return true;
+	}
+
+	// if (parameters.error_message) {
+	// 	Printer::Print("error = " + *parameters.error_message);
+	// } else {
+	// 	Printer::Print("error = nullptr");
+	// }
+
+	if (!parameters.error_message) {
+		// not in TRY_CAST mode - the error will be thrown by the caller
+		return false;
+	}
+
+	// Printer::Print("result = " + result.ToString(count));
+
+	// TRY_CAST mode: child cast failures may have produced NULL keys in the
+	// result maps. NULL keys are not allowed, so NULL out those map entries.
+	auto &keys = MapVector::GetKeys(result);
+	auto maps_length = ListVector::GetListSize(result);
+	auto key_validity = keys.Validity(maps_length);
+
+	if (result.GetVectorType() == VectorType::CONSTANT_VECTOR) {
+		if (!ConstantVector::IsNull(result)) {
+			auto list_data = ConstantVector::GetData<list_entry_t>(result);
+			for (idx_t j = 0; j < list_data->length; j++) {
+				if (!key_validity.IsValid(list_data->offset + j)) {
+					ConstantVector::SetNull(result);
+					break;
+				}
+			}
+		}
+	} else {
+		auto list_data = FlatVector::GetData<list_entry_t>(result);
+		auto &result_validity = FlatVector::ValidityMutable(result);
+		for (idx_t i = 0; i < count; i++) {
+			if (!result_validity.RowIsValid(i)) {
+				continue;
+			}
+			for (idx_t j = 0; j < list_data[i].length; j++) {
+				if (!key_validity.IsValid(list_data[i].offset + j)) {
+					result_validity.SetInvalid(i);
+					break;
+				}
+			}
+		}
+	}
+	return false;
+}
+
+/*
+Almost — we NULL the map entry, not the whole list. To be precise:
+Before the fix: TRY_CAST NULLs just the individual key → produces a map with a NULL key → violates the map invariant → assertion failure
+After the fix: We detect the NULL key and NULL the entire map entry that contains it → the list itself stays valid with [NULL, NULL] as elements
+
+memory D SELECT TRY_CAST([MAP{'a':1}, MAP{'b':2}, MAP{'3':3}] AS MAP(INT,INT)[]);
+*/
+
 BoundCastInfo DefaultCasts::MapCastSwitch(BindCastInput &input, const LogicalType &source, const LogicalType &target) {
 	switch (target.id()) {
 	case LogicalTypeId::MAP:
-		return BoundCastInfo(ListCast::ListToListCast, ListBoundCastData::BindListToListCast(input, source, target),
+		return BoundCastInfo(MapToMapCast, ListBoundCastData::BindListToListCast(input, source, target),
 		                     ListBoundCastData::InitListLocalState);
 	case LogicalTypeId::VARCHAR: {
 		auto varchar_type = LogicalType::MAP(LogicalType::VARCHAR, LogicalType::VARCHAR);

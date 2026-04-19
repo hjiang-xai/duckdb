@@ -1,0 +1,67 @@
+memory D SELECT TRY_CAST([MAP{'a':1}, MAP{'b':2}] AS MAP(INT,INT)[]);
+INTERNAL Error:
+Assertion triggered in file "/Users/hjiang/Desktop/duckdb/src/common/types/vector.cpp" on line 840: valid_check == MapInvalidReason::VALID
+
+Stack Trace:
+
+0        duckdb::Exception::ToJSON(duckdb::ExceptionType, std::__1::basic_string<char, std::__1::char_traits<char>, std::__1::allocator<char>> const&) + 420
+1        duckdb::Exception::Exception(duckdb::ExceptionType, std::__1::basic_string<char, std::__1::char_traits<char>, std::__1::allocator<char>> const&) + 468
+2        duckdb::InternalException::InternalException(std::__1::basic_string<char, std::__1::char_traits<char>, std::__1::allocator<char>> const&) + 220
+3        duckdb::InternalException::InternalException(std::__1::basic_string<char, std::__1::char_traits<char>, std::__1::allocator<char>> const&) + 84
+4        duckdb::InternalException::InternalException<char const*&, int&, char const*&>(std::__1::basic_string<char, std::__1::char_traits<char>, std::__1::allocator<char>> const&, char const*&, int&, char const*&) + 640
+5        duckdb::DuckDBAssertInternal(bool, char const*, char const*, int) + 792
+6        duckdb::Vector::Verify(duckdb::SelectionVector const&, unsigned long long) const + 1232
+7        duckdb::VectorListBuffer::Verify(duckdb::LogicalType const&, duckdb::SelectionVector const&, unsigned long long) const + 4532
+8        duckdb::Vector::Verify(duckdb::SelectionVector const&, unsigned long long) const + 920
+9        duckdb::Vector::Verify(unsigned long long) const + 140
+10       duckdb::ExpressionExecutor::Verify(duckdb::Expression const&, duckdb::Vector&, unsigned long long) + 800
+11       duckdb::ExpressionExecutor::Execute(duckdb::Expression const&, duckdb::ExpressionState*, duckdb::SelectionVector const*, unsigned long long, duckdb::Vector&) + 6580
+12       duckdb::ExpressionExecutor::ExecuteExpression(unsigned long long, duckdb::Vector&) + 1596
+13       duckdb::ExpressionExecutor::ExecuteExpression(duckdb::Vector&) + 260
+14       duckdb::ExpressionExecutor::EvaluateScalar(duckdb::ClientContext&, duckdb::Expression const&, bool) + 1348
+15       duckdb::ExpressionExecutor::TryEvaluateScalar(duckdb::ClientContext&, duckdb::Expression const&, duckdb::Value&) + 456
+16       duckdb::ConstantFoldingRule::Apply(duckdb::LogicalOperator&, duckdb::vector<std::__1::reference_wrapper<duckdb::Expression>, true, std::__1::allocator<std::__1::reference_wrapper<duckdb::Expression>>>&, bool&, bool) + 1556
+17       duckdb::ExpressionRewriter::ApplyRules(duckdb::LogicalOperator&, duckdb::vector<std::__1::reference_wrapper<duckdb::Rule>, true, std::__1::allocator<std::__1::reference_wrapper<duckdb::Rule>>> const&, duckdb::unique_ptr<duckdb::Expression, std::__1::default_delete<duckdb::Expression>, true>, bool&, bool) + 2500
+18       duckdb::ExpressionRewriter::VisitExpression(duckdb::unique_ptr<duckdb::Expression, std::__1::default_delete<duckdb::Expression>, true>*) + 932
+19       duckdb::LogicalOperatorVisitor::VisitOperatorExpressions(duckdb::LogicalOperator&)::$_0::operator()(duckdb::unique_ptr<duckdb::Expression, std::__1::default_delete<duckdb::Expression>, true>*) const + 368
+20       decltype(std::declval<duckdb::LogicalOperatorVisitor::VisitOperatorExpressions(duckdb::LogicalOperator&)::$_0&>()(std::declval<duckdb::unique_ptr<duckdb::Expression, std::__1::default_delete<duckdb::Expression>, true>*>())) std::__1::__invoke[abi:ne200100]<duckdb::LogicalOperatorVisitor::VisitOperatorExpressions(duckdb::LogicalOperator&)::$_0&, duckdb::unique_ptr<duckdb::Expression, std::__1::default_delete<duckdb::Expression>, true>*>(duckdb::LogicalOperatorVisitor::VisitOperatorExpressions(duckdb::LogicalOperator&)::$_0&, duckdb::unique_ptr<duckdb::Expression, std::__1::default_delete<duckdb::Expression>, true>*&&) + 148
+21       void std::__1::__invoke_void_return_wrapper<void, true>::__call[abi:ne200100]<duckdb::LogicalOperatorVisitor::VisitOperatorExpressions(duckdb::LogicalOperator&)::$_0&, duckdb::unique_ptr<duckdb::Expression, std::__1::default_delete<duckdb::Expression>, true>*>(duckdb::LogicalOperatorVisitor::VisitOperatorExpressions(duckdb::LogicalOperator&)::$_0&, duckdb::unique_ptr<duckdb::Expression, std::__1::default_delete<duckdb::Expression>, true>*&&) + 136
+22       void std::__1::__invoke_r[abi:ne200100]<void, duckdb::LogicalOperatorVisitor::VisitOperatorExpressions(duckdb::LogicalOperator&)::$_0&, duckdb::unique_ptr<duckdb::Expression, std::__1::default_delete<duckdb::Expression>, true>*>(duckdb::LogicalOperatorVisitor::VisitOperatorExpressions(duckdb::LogicalOperator&)::$_0&, duckdb::unique_ptr<duckdb::Expression, std::__1::default_delete<duckdb::Expression>, true>*&&) + 136
+23       std::__1::__function::__alloc_func<duckdb::LogicalOperatorVisitor::VisitOperatorExpressions(duckdb::LogicalOperator&)::$_0, std::__1::allocator<duckdb::LogicalOperatorVisitor::VisitOperatorExpressions(duckdb::LogicalOperator&)::$_0>, void (duckdb::unique_ptr<duckdb::Expression, std::__1::default_delete<duckdb::Expression>, true>*)>::operator()[abi:ne200100](duckdb::unique_ptr<duckdb::Expression, std::__1::default_delete<duckdb::Expression>, true>*&&) + 184
+24       std::__1::__function::__func<duckdb::LogicalOperatorVisitor::VisitOperatorExpressions(duckdb::LogicalOperator&)::$_0, std::__1::allocator<duckdb::LogicalOperatorVisitor::VisitOperatorExpressions(duckdb::LogicalOperator&)::$_0>, void (duckdb::unique_ptr<duckdb::Expression, std::__1::default_delete<duckdb::Expression>, true>*)>::operator()(duckdb::unique_ptr<duckdb::Expression, std::__1::default_delete<duckdb::Expression>, true>*&&) + 316
+25       std::__1::__function::__value_func<void (duckdb::unique_ptr<duckdb::Expression, std::__1::default_delete<duckdb::Expression>, true>*)>::operator()[abi:ne200100](duckdb::unique_ptr<duckdb::Expression, std::__1::default_delete<duckdb::Expression>, true>*&&) const + 588
+26       std::__1::function<void (duckdb::unique_ptr<duckdb::Expression, std::__1::default_delete<duckdb::Expression>, true>*)>::operator()(duckdb::unique_ptr<duckdb::Expression, std::__1::default_delete<duckdb::Expression>, true>*) const + 392
+27       duckdb::LogicalOperatorVisitor::EnumerateExpressions(duckdb::LogicalOperator&, std::__1::function<void (duckdb::unique_ptr<duckdb::Expression, std::__1::default_delete<duckdb::Expression>, true>*)> const&) + 15580
+28       duckdb::LogicalOperatorVisitor::VisitOperatorExpressions(duckdb::LogicalOperator&) + 460
+29       duckdb::ExpressionRewriter::VisitOperator(duckdb::LogicalOperator&) + 3776
+30       duckdb::Optimizer::RunBuiltInOptimizers()::$_0::operator()() const + 452
+31       decltype(std::declval<duckdb::Optimizer::RunBuiltInOptimizers()::$_0&>()()) std::__1::__invoke[abi:ne200100]<duckdb::Optimizer::RunBuiltInOptimizers()::$_0&>(duckdb::Optimizer::RunBuiltInOptimizers()::$_0&) + 76
+32       void std::__1::__invoke_void_return_wrapper<void, true>::__call[abi:ne200100]<duckdb::Optimizer::RunBuiltInOptimizers()::$_0&>(duckdb::Optimizer::RunBuiltInOptimizers()::$_0&) + 76
+33       void std::__1::__invoke_r[abi:ne200100]<void, duckdb::Optimizer::RunBuiltInOptimizers()::$_0&>(duckdb::Optimizer::RunBuiltInOptimizers()::$_0&) + 76
+34       std::__1::__function::__alloc_func<duckdb::Optimizer::RunBuiltInOptimizers()::$_0, std::__1::allocator<duckdb::Optimizer::RunBuiltInOptimizers()::$_0>, void ()>::operator()[abi:ne200100]() + 124
+35       std::__1::__function::__func<duckdb::Optimizer::RunBuiltInOptimizers()::$_0, std::__1::allocator<duckdb::Optimizer::RunBuiltInOptimizers()::$_0>, void ()>::operator()() + 256
+36       std::__1::__function::__value_func<void ()>::operator()[abi:ne200100]() const + 528
+37       std::__1::function<void ()>::operator()() const + 124
+38       duckdb::Optimizer::RunOptimizer(duckdb::OptimizerType, std::__1::function<void ()> const&) + 640
+39       duckdb::Optimizer::RunBuiltInOptimizers() + 1920
+40       duckdb::Optimizer::Optimize(duckdb::unique_ptr<duckdb::LogicalOperator, std::__1::default_delete<duckdb::LogicalOperator>, true>) + 1604
+41       duckdb::ClientContext::CreatePreparedStatementInternal(duckdb::ClientContextLock&, std::__1::basic_string<char, std::__1::char_traits<char>, std::__1::allocator<char>> const&, duckdb::unique_ptr<duckdb::SQLStatement, std::__1::default_delete<duckdb::SQLStatement>, true>, duckdb::PendingQueryParameters) + 6324
+42       duckdb::ClientContext::CreatePreparedStatement(duckdb::ClientContextLock&, std::__1::basic_string<char, std::__1::char_traits<char>, std::__1::allocator<char>> const&, duckdb::unique_ptr<duckdb::SQLStatement, std::__1::default_delete<duckdb::SQLStatement>, true>, duckdb::PendingQueryParameters, duckdb::PreparedStatementMode) + 5856
+43       duckdb::ClientContext::PendingStatementInternal(duckdb::ClientContextLock&, std::__1::basic_string<char, std::__1::char_traits<char>, std::__1::allocator<char>> const&, duckdb::unique_ptr<duckdb::SQLStatement, std::__1::default_delete<duckdb::SQLStatement>, true>, duckdb::PendingQueryParameters const&) + 1316
+44       duckdb::ClientContext::PendingStatementOrPreparedStatement(duckdb::ClientContextLock&, std::__1::basic_string<char, std::__1::char_traits<char>, std::__1::allocator<char>> const&, duckdb::unique_ptr<duckdb::SQLStatement, std::__1::default_delete<duckdb::SQLStatement>, true>, duckdb::shared_ptr<duckdb::PreparedStatementData, true>&, duckdb::PendingQueryParameters const&) + 2152
+45       duckdb::ClientContext::PendingStatementOrPreparedStatementInternal(duckdb::ClientContextLock&, std::__1::basic_string<char, std::__1::char_traits<char>, std::__1::allocator<char>> const&, duckdb::unique_ptr<duckdb::SQLStatement, std::__1::default_delete<duckdb::SQLStatement>, true>, duckdb::shared_ptr<duckdb::PreparedStatementData, true>&, duckdb::PendingQueryParameters const&) + 10152
+46       duckdb::ClientContext::PendingQueryInternal(duckdb::ClientContextLock&, duckdb::unique_ptr<duckdb::SQLStatement, std::__1::default_delete<duckdb::SQLStatement>, true>, duckdb::PendingQueryParameters const&, bool) + 1076
+47       duckdb::ClientContext::PendingQuery(duckdb::unique_ptr<duckdb::SQLStatement, std::__1::default_delete<duckdb::SQLStatement>, true>, std::__1::unordered_map<std::__1::basic_string<char, std::__1::char_traits<char>, std::__1::allocator<char>>, duckdb::BoundParameterData, duckdb::CaseInsensitiveStringHashFunction, duckdb::CaseInsensitiveStringEquality, std::__1::allocator<std::__1::pair<std::__1::basic_string<char, std::__1::char_traits<char>, std::__1::allocator<char>> const, duckdb::BoundParameterData>>>&, duckdb::QueryParameters) + 1284
+48       duckdb::ClientContext::PendingQuery(duckdb::unique_ptr<duckdb::SQLStatement, std::__1::default_delete<duckdb::SQLStatement>, true>, duckdb::QueryParameters) + 564
+49       duckdb::ClientContext::Query(duckdb::unique_ptr<duckdb::SQLStatement, std::__1::default_delete<duckdb::SQLStatement>, true>, duckdb::QueryParameters) + 624
+50       duckdb::Connection::SendQuery(duckdb::unique_ptr<duckdb::SQLStatement, std::__1::default_delete<duckdb::SQLStatement>, true>, duckdb::QueryParameters) + 588
+51       duckdb_shell::ShellState::ExecuteStatement(duckdb::unique_ptr<duckdb::SQLStatement, std::__1::default_delete<duckdb::SQLStatement>, true>) + 1860
+52       duckdb_shell::ShellState::ExecuteSQL(std::__1::basic_string<char, std::__1::char_traits<char>, std::__1::allocator<char>> const&) + 3732
+53       duckdb_shell::ShellState::RunOneSqlLine(duckdb_shell::InputMode, char*) + 836
+54       duckdb_shell::ShellState::ProcessInput(duckdb_shell::InputMode) + 6392
+55       RunShell(int, char const**) + 13140
+56       main + 420
+57       start + 6076
+
+This error signals an assertion failure within DuckDB. This usually occurs due to unexpected conditions or errors in the program's logic.
+For more information, see https://duckdb.org/docs/current/dev/internal_errors

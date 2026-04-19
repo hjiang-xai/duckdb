@@ -1,0 +1,13 @@
+memory D CREATE TABLE csv_rt(x VARCHAR);
+memory D INSERT INTO csv_rt VALUES ('hello'), (NULL), (''), ('world');
+memory D COPY csv_rt TO '/tmp/csv_rt.csv' (FORMAT CSV);
+memory D SELECT x, x IS NULL AS is_null FROM read_csv('/tmp/csv_rt.csv');
+┌─────────┬─────────┐
+│    x    │ is_null │
+│ varchar │ boolean │
+├─────────┼─────────┤
+│ hello   │ false   │
+│ NULL    │ true    │
+│ NULL    │ true    │
+│ world   │ false   │
+└─────────┴─────────┘

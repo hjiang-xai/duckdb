@@ -139,7 +139,7 @@ void PrimitiveColumnWriter::BeginWrite(ColumnWriterState &state_p) {
 void PrimitiveColumnWriter::WriteLevels(Allocator &allocator, WriteStream &temp_writer,
                                         const unsafe_vector<uint16_t> &levels, idx_t max_value, idx_t offset,
                                         idx_t count, optional_idx null_count) {
-	if (levels.empty() || count == 0) {
+	if (levels.empty() || count == 0 || max_value == 0) {
 		return;
 	}
 

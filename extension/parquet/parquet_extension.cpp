@@ -90,6 +90,8 @@ struct ParquetWriteBindData : public TableFunctionData {
 	ShreddingType shredding_types;
 	//! The compression level, higher value is more
 	int64_t compression_level = ZStdFileSystem::DefaultCompressionLevel();
+	//! Per-column NOT NULL flags
+	vector<bool> not_null_columns;
 
 	//! Which encodings to include when writing
 	ParquetVersion parquet_version = ParquetVersion::V1;
@@ -343,6 +345,7 @@ static unique_ptr<FunctionData> ParquetWriteBind(ClientContext &context, CopyFun
 
 	bind_data->sql_types = sql_types;
 	bind_data->column_names = names;
+	bind_data->not_null_columns = input.not_null_columns;
 	return std::move(bind_data);
 }
 
@@ -358,7 +361,7 @@ static unique_ptr<GlobalFunctionData> ParquetWriteInitializeGlobal(ClientContext
 	    parquet_bind.encryption_config, parquet_bind.dictionary_size_limit,
 	    parquet_bind.string_dictionary_page_size_limit, parquet_bind.enable_bloom_filters,
 	    parquet_bind.bloom_filter_false_positive_ratio, parquet_bind.compression_level, parquet_bind.parquet_version,
-	    parquet_bind.geoparquet_version);
+	    parquet_bind.geoparquet_version, parquet_bind.not_null_columns);
 	return std::move(global_state);
 }
 
@@ -615,6 +618,8 @@ static void ParquetCopySerialize(Serializer &serializer, const FunctionData &bin
 	                                    default_value.geoparquet_version);
 	serializer.WritePropertyWithDefault<ShreddingType>(117, "shredding_types", bind_data.shredding_types,
 	                                                   default_value.shredding_types);
+	serializer.WritePropertyWithDefault<vector<bool>>(118, "not_null_columns", bind_data.not_null_columns,
+	                                                  default_value.not_null_columns);
 }
 
 static unique_ptr<FunctionData> ParquetCopyDeserialize(Deserializer &deserializer, CopyFunction &function) {
@@ -650,6 +655,8 @@ static unique_ptr<FunctionData> ParquetCopyDeserialize(Deserializer &deserialize
 	    deserializer.ReadPropertyWithExplicitDefault(116, "geoparquet_version", default_value.geoparquet_version);
 	data->shredding_types =
 	    deserializer.ReadPropertyWithExplicitDefault<ShreddingType>(117, "shredding_types", ShreddingType());
+	data->not_null_columns =
+	    deserializer.ReadPropertyWithExplicitDefault<vector<bool>>(118, "not_null_columns", vector<bool>());
 
 	return std::move(data);
 }

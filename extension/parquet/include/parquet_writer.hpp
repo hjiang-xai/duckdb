@@ -111,7 +111,7 @@ public:
 	              shared_ptr<ParquetEncryptionConfig> encryption_config, optional_idx dictionary_size_limit,
 	              idx_t string_dictionary_page_size_limit, bool enable_bloom_filters,
 	              double bloom_filter_false_positive_ratio, int64_t compression_level, ParquetVersion parquet_version,
-	              GeoParquetVersion geoparquet_version);
+	              GeoParquetVersion geoparquet_version, vector<bool> not_null_columns = {});
 	~ParquetWriter();
 
 public:
@@ -210,6 +210,7 @@ private:
 	shared_ptr<EncryptionUtil> encryption_util;
 	ParquetVersion parquet_version;
 	GeoParquetVersion geoparquet_version;
+	vector<bool> not_null_columns;
 
 	unique_ptr<BufferedFileWriter> writer;
 	//! Atomics to reduce contention when rotating writes to multiple Parquet files

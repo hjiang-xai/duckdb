@@ -22,6 +22,7 @@
 #include "duckdb/planner/operator/logical_projection.hpp"
 #include "duckdb/planner/expression_binder/table_function_binder.hpp"
 #include "duckdb/common/algorithm.hpp"
+#include "duckdb/parser/constraints/not_null_constraint.hpp"
 
 #include "duckdb/main/extension_entries.hpp"
 
@@ -276,6 +277,24 @@ BoundStatement Binder::BindCopyTo(CopyStatement &stmt, const CopyFunction &funct
 	    LogicalCopyToFile::GetNamesWithoutPartitions(unique_column_names, partition_cols, write_partition_columns);
 	auto types_to_write =
 	    LogicalCopyToFile::GetTypesWithoutPartitions(select_node.types, partition_cols, write_partition_columns);
+
+	// If copying from a table, propagate NOT NULL constraints
+	if (!copy_info.table.empty()) {
+		auto &table = Catalog::GetEntry<TableCatalogEntry>(context, copy_info.catalog, copy_info.schema, copy_info.table);
+		bind_input.not_null_columns.resize(names_to_write.size(), false);
+		for (auto &constraint : table.GetConstraints()) {
+			if (constraint->type == ConstraintType::NOT_NULL) {
+				auto &not_null = constraint->Cast<NotNullConstraint>();
+				const auto &col_name = table.GetColumn(not_null.index).GetName();
+				for (idx_t i = 0; i < names_to_write.size(); i++) {
+					if (names_to_write[i] == col_name) {
+						bind_input.not_null_columns[i] = true;
+					}
+				}
+			}
+		}
+	}
+
 	auto function_data = function.copy_to_bind(context, bind_input, names_to_write, types_to_write);
 
 	const auto rotate = function.rotate_files && function.rotate_files(*function_data, file_size_bytes);

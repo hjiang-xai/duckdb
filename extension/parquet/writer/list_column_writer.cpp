@@ -104,7 +104,7 @@ void ListColumnWriter::Prepare(ColumnWriterState &state_p, ColumnWriterState *pa
 			}
 		} else {
 			if (!can_have_nulls) {
-				throw IOException("Parquet writer: map key column is not allowed to contain NULL values");
+				throw IOException("Parquet writer: REQUIRED column is not allowed to contain NULL values");
 			}
 			state.definition_levels.push_back(MaxDefine() - 1);
 			state.repetition_levels.push_back(first_repeat_level);

@@ -22,3 +22,20 @@ ORDER BY name;
 a	REQUIRED
 b	OPTIONAL
 c	REQUIRED
+
+# COPY from a view
+statement ok
+CREATE VIEW v AS SELECT * FROM t;
+
+statement ok
+COPY v TO '__TEST_DIR__/not_null_view.parquet';
+
+query II
+SELECT name, repetition_type
+FROM parquet_schema('__TEST_DIR__/not_null_view.parquet')
+WHERE name != 'duckdb_schema'
+ORDER BY name;
+----
+a	OPTIONAL
+b	OPTIONAL
+c	OPTIONAL

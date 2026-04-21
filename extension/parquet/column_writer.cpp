@@ -211,7 +211,7 @@ void ColumnWriter::HandleDefineLevels(ColumnWriterState &state, ColumnWriterStat
 			} else {
 				//! Produce a null define
 				if (!can_have_nulls) {
-					throw IOException("Parquet writer: map key column is not allowed to contain NULL values");
+					throw IOException("Parquet writer: REQUIRED column is not allowed to contain NULL values");
 				}
 				state.null_count++;
 				state.definition_levels.push_back(null_value);
@@ -235,7 +235,7 @@ void ColumnWriter::HandleDefineLevels(ColumnWriterState &state, ColumnWriterStat
 		}
 	}
 	if (!can_have_nulls && state.null_count != 0) {
-		throw IOException("Parquet writer: map key column is not allowed to contain NULL values");
+		throw IOException("Parquet writer: REQUIRED column is not allowed to contain NULL values");
 	}
 }
 

@@ -278,13 +278,13 @@ BoundStatement Binder::BindCopyTo(CopyStatement &stmt, const CopyFunction &funct
 	auto types_to_write =
 	    LogicalCopyToFile::GetTypesWithoutPartitions(select_node.types, partition_cols, write_partition_columns);
 
-	// If copying from a table (not a view or query), propagate NOT NULL constraints
+	// If copying from a table (not a view, query, or file), propagate NOT NULL constraints
 	if (!copy_info.table.empty()) {
-		auto &catalog = Catalog::GetCatalog(context, copy_info.catalog);
-		auto &entry = catalog.GetEntry(context, copy_info.schema,
-		                               EntryLookupInfo(CatalogType::TABLE_ENTRY, copy_info.table));
-		if (entry.type == CatalogType::TABLE_ENTRY) {
-			auto &table = entry.Cast<TableCatalogEntry>();
+		auto entry = Catalog::GetEntry(context, copy_info.catalog, copy_info.schema,
+		                               EntryLookupInfo(CatalogType::TABLE_ENTRY, copy_info.table),
+		                               OnEntryNotFound::RETURN_NULL);
+		if (entry && entry->type == CatalogType::TABLE_ENTRY) {
+			auto &table = entry->Cast<TableCatalogEntry>();
 			case_insensitive_map_t<idx_t> name_to_idx;
 			for (idx_t i = 0; i < names_to_write.size(); i++) {
 				name_to_idx[names_to_write[i]] = i;

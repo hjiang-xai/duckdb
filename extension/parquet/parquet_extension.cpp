@@ -26,6 +26,7 @@
 #include "duckdb/catalog/catalog.hpp"
 #include "duckdb/catalog/catalog_entry/table_catalog_entry.hpp"
 #include "duckdb/catalog/catalog_entry/table_function_catalog_entry.hpp"
+#include "duckdb/parser/constraints/not_null_constraint.hpp"
 #include "duckdb/common/constants.hpp"
 #include "duckdb/common/enums/file_compression_type.hpp"
 #include "duckdb/common/file_system.hpp"
@@ -347,7 +348,7 @@ static unique_ptr<FunctionData> ParquetWriteBind(ClientContext &context, CopyFun
 	bind_data->sql_types = sql_types;
 	bind_data->column_names = names;
 
-	// Determine non-nullable columns from table statistics (if copying from a table)
+	// Determine non-nullable columns from table constraints (if copying from a table)
 	auto &copy_info = input.info;
 	if (!copy_info.table.empty()) {
 		auto entry =
@@ -356,19 +357,21 @@ static unique_ptr<FunctionData> ParquetWriteBind(ClientContext &context, CopyFun
 		if (entry && entry->type == CatalogType::TABLE_ENTRY) {
 			auto &table = entry->Cast<TableCatalogEntry>();
 			auto &columns = table.GetColumns();
-			unordered_map<string, column_t> name_to_col;
-			for (auto &col : columns.Logical()) {
-				name_to_col[col.GetName()] = col.Oid();
-			}
-			bind_data->not_null_columns.resize(names.size(), false);
-			for (idx_t i = 0; i < names.size(); i++) {
-				auto it = name_to_col.find(names[i]);
-				if (it == name_to_col.end()) {
-					continue;
+			auto &constraints = table.GetConstraints();
+			unordered_set<string> not_null_col_names;
+			for (auto &constraint : constraints) {
+				if (constraint->type == ConstraintType::NOT_NULL) {
+					auto &not_null = constraint->Cast<NotNullConstraint>();
+					auto &col = columns.GetColumn(not_null.index);
+					not_null_col_names.insert(col.GetName());
 				}
-				auto stats = table.GetStatistics(context, it->second);
-				if (stats && !stats->CanHaveNull()) {
-					bind_data->not_null_columns[i] = true;
+			}
+			if (!not_null_col_names.empty()) {
+				bind_data->not_null_columns.resize(names.size(), false);
+				for (idx_t i = 0; i < names.size(); i++) {
+					if (not_null_col_names.count(names[i])) {
+						bind_data->not_null_columns[i] = true;
+					}
 				}
 			}
 		}

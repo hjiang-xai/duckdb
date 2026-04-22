@@ -24,6 +24,7 @@
 #include <string>
 #include <vector>
 #include "duckdb/catalog/catalog.hpp"
+#include "duckdb/catalog/catalog_entry/table_catalog_entry.hpp"
 #include "duckdb/catalog/catalog_entry/table_function_catalog_entry.hpp"
 #include "duckdb/common/constants.hpp"
 #include "duckdb/common/enums/file_compression_type.hpp"
@@ -90,6 +91,8 @@ struct ParquetWriteBindData : public TableFunctionData {
 	ShreddingType shredding_types;
 	//! The compression level, higher value is more
 	int64_t compression_level = ZStdFileSystem::DefaultCompressionLevel();
+	//! Per-column NOT NULL flags
+	vector<bool> not_null_columns;
 
 	//! Which encodings to include when writing
 	ParquetVersion parquet_version = ParquetVersion::V1;
@@ -343,6 +346,34 @@ static unique_ptr<FunctionData> ParquetWriteBind(ClientContext &context, CopyFun
 
 	bind_data->sql_types = sql_types;
 	bind_data->column_names = names;
+
+	// Determine non-nullable columns from table statistics (if copying from a table)
+	auto &copy_info = input.info;
+	if (!copy_info.table.empty()) {
+		auto entry =
+		    Catalog::GetEntry(context, copy_info.catalog, copy_info.schema,
+		                      EntryLookupInfo(CatalogType::TABLE_ENTRY, copy_info.table), OnEntryNotFound::RETURN_NULL);
+		if (entry && entry->type == CatalogType::TABLE_ENTRY) {
+			auto &table = entry->Cast<TableCatalogEntry>();
+			auto &columns = table.GetColumns();
+			unordered_map<string, column_t> name_to_col;
+			for (auto &col : columns.Logical()) {
+				name_to_col[col.GetName()] = col.Oid();
+			}
+			bind_data->not_null_columns.resize(names.size(), false);
+			for (idx_t i = 0; i < names.size(); i++) {
+				auto it = name_to_col.find(names[i]);
+				if (it == name_to_col.end()) {
+					continue;
+				}
+				auto stats = table.GetStatistics(context, it->second);
+				if (stats && !stats->CanHaveNull()) {
+					bind_data->not_null_columns[i] = true;
+				}
+			}
+		}
+	}
+
 	return std::move(bind_data);
 }
 
@@ -358,7 +389,7 @@ static unique_ptr<GlobalFunctionData> ParquetWriteInitializeGlobal(ClientContext
 	    parquet_bind.encryption_config, parquet_bind.dictionary_size_limit,
 	    parquet_bind.string_dictionary_page_size_limit, parquet_bind.enable_bloom_filters,
 	    parquet_bind.bloom_filter_false_positive_ratio, parquet_bind.compression_level, parquet_bind.parquet_version,
-	    parquet_bind.geoparquet_version);
+	    parquet_bind.geoparquet_version, parquet_bind.not_null_columns);
 	return std::move(global_state);
 }
 
@@ -615,6 +646,8 @@ static void ParquetCopySerialize(Serializer &serializer, const FunctionData &bin
 	                                    default_value.geoparquet_version);
 	serializer.WritePropertyWithDefault<ShreddingType>(117, "shredding_types", bind_data.shredding_types,
 	                                                   default_value.shredding_types);
+	serializer.WritePropertyWithDefault<vector<bool>>(118, "not_null_columns", bind_data.not_null_columns,
+	                                                  default_value.not_null_columns);
 }
 
 static unique_ptr<FunctionData> ParquetCopyDeserialize(Deserializer &deserializer, CopyFunction &function) {
@@ -650,6 +683,8 @@ static unique_ptr<FunctionData> ParquetCopyDeserialize(Deserializer &deserialize
 	    deserializer.ReadPropertyWithExplicitDefault(116, "geoparquet_version", default_value.geoparquet_version);
 	data->shredding_types =
 	    deserializer.ReadPropertyWithExplicitDefault<ShreddingType>(117, "shredding_types", ShreddingType());
+	data->not_null_columns =
+	    deserializer.ReadPropertyWithExplicitDefault<vector<bool>>(118, "not_null_columns", vector<bool>());
 
 	return std::move(data);
 }

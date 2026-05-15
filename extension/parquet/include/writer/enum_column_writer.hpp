@@ -58,6 +58,9 @@ private:
 	template <class T>
 	void WriteEnumInternal(WriteStream &temp_writer, Vector &input_column, idx_t chunk_start, idx_t chunk_end,
 	                       EnumWriterPageState &page_state);
+
+	//! Tracks which enum values have actually been written (indexed by enum id).
+	vector<bool> seen_enum;
 };
 
 } // namespace duckdb
